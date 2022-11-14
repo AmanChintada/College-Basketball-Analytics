@@ -1,0 +1,249 @@
+---
+title: "Project1"
+author: "Aman"
+date: "2022-10-03"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+ 
+```{r}
+library(tidyverse)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+df <- read.csv("cbb.csv", stringsAsFactors = FALSE)
+#Sort by year
+```
+After importing the necessary libraries in order to work with the dataframe created after importing "cbb.csv", we can start to look at the variables in the data frame, and what they mean. This csv file consists of a variety of collegiate basketball statistics from the year 2013 to 2019. The teams in this file represent the university, and belong to the NCAA conference. For this project, we will not need all the variables(columns), so here is a description of all the columns that will be used in this analysis.
+
+TEAM: Division I college basketball team
+
+CONF: The athletic conference in which the team participates. There are a total of 32 conferences. Here are the acronyms and what they stand for:
+A10 = Atlantic 10, ACC = Atlantic Coast Conference, AE = America East, Amer = American, ASun = ASUN, B10 = Big Ten, B12 = Big 12, BE = Big East, BSky = Big Sky, BSth = Big South, BW = Big West, CAA = Colonial Athletic Association, CUSA = Conference USA, Horz = Horizon League, Ivy = Ivy League, MAAC = Metro Atlantic Athletic Conference, MAC = Mid-American Conference, MEAC = Mid-Eastern Athletic Conference, MVC = Missouri Valley Conference, MWC = Mountain West, NEC = Northeast Conference, OVC = Ohio Valley Conference, P12 = Pac-12, Pat = Patriot League, SB = Sun Belt, SC = Southern Conference, SEC = South Eastern Conference, Slnd = Southland Conference, Sum = Summit League, SWAC = Southwestern Athletic Conference, WAC = Western Athletic Conference, WCC = West Coast Conference
+
+G: Number of games played
+
+W: Number of games won
+
+ADJOE: Adjusted Offensive Efficiency (An estimate of the offensive efficiency (points scored per 100 possessions) a team would have against the average Division I defense)
+
+ADJDE: Adjusted Defensive Efficiency (An estimate of the defensive efficiency (points allowed per 100 possessions) a team would have against the average Division I offense)
+
+EFG_O: Effective Field Goal Percentage Shot
+
+EFG_D: Effective Field Goal Percentage Allowed
+
+TOR: Turnover Percentage Allowed (Turnover Rate)
+
+TORD: Turnover Percentage Committed (Steal Rate)
+
+ORB: Offensive Rebound Rate
+
+DRB: Offensive Rebound Rate Allowed
+
+FTR : Free Throw Rate (How often the given team shoots Free Throws)
+
+FTRD: Free Throw Rate Allowed
+
+X2P_O: Two-Point Shooting Percentage
+
+X2P_D: Two-Point Shooting Percentage Allowed
+
+X3P_O: Three-Point Shooting Percentage
+
+X3P_D: Three-Point Shooting Percentage Allowed
+
+The March Madness tournament is essentially the postseason tournament for NCAA college D1 basketball, where 68 teams play each other to finally result in a victor who will be crowned as the national champion.
+
+WAB: Wins Above Bubble (The bubble refers to the cut off between making the NCAA March Madness Tournament and not making it)
+
+POSTSEASON: Round where the given team was eliminated or where their season ended (R68 = First Four, R64 = Round of 64, R32 = Round of 32, S16 = Sweet Sixteen, E8 = Elite Eight, F4 = Final Four, 2ND = Runner-up, Champion = Winner of the NCAA March Madness Tournament for that given year)
+
+SEED: Seed in the NCAA March Madness Tournament
+
+YEAR: Season
+
+We can start by filtering out the variables that we do not need
+
+```{r}
+df_working = df %>% select(TEAM,CONF,G,W, ADJOE, ADJDE,EFG_O,EFG_D,TOR,TORD,ORB,DRB,FTR,FTRD,X2P_O,X2P_D,X3P_O,X3P_D,WAB,POSTSEASON,SEED,YEAR)
+
+```
+
+To make it easier to view turnover rate (TOR) and steal rate (TORD), let us create a new column called Turnover differential (TORdiff) which is the difference between these two stats (TORD - TOR). A positive turnover differential means that a team steals the ball more than it turns it over. A negative turnover differential means that a team turns the ball over more than it steals it.
+
+```{r}
+df_working = mutate(df_working, TORdiff = TORD - TOR)
+```
+
+We can also create subsets for each year to work with later on
+```{r}
+df_2013 = filter(df_working,YEAR==2013)
+df_2014 = filter(df_working,YEAR==2014)
+df_2015 = filter(df_working,YEAR==2015)
+df_2016 = filter(df_working,YEAR==2016)
+df_2017 = filter(df_working,YEAR==2017)
+df_2018 = filter(df_working,YEAR==2018)
+df_2019 = filter(df_working,YEAR==2019)
+```
+
+
+Now that we have our working data frame, we can begin to look at the questions we wish to answer in this project. 
+
+Basketball is a game with an astounding number of variables that can mean the difference between a win and a loss. In very simple terms, some of the best basketball teams have a well-balanced offense and defense. This means that their offensive statistics (indicating that they can score a lot of points) are high and their defensive statistics are low (indicating that don't allow too many points). 
+Here is a more detailed breakdown of how we will be looking at offensive and defensive statistics, given the variables in this data set:
+
+Offensive statistics:
+ADJOE, EFG_O, TOR (a low turnover rate), ORB, FTR, X2P_O, X3P_O
+
+Defensive statistics:
+ADJDE, EFG_D, TORD (high steal rate), DRB, FTRD, X2P_D, X3P_D
+
+Based on these statistics we can start to evaluate teams based on how 'good' they are on offense and defense. This takes us to our first question, where we look at the best offensive team each year from 2013 to 2019. 
+To evaluate the best offensive team for each year, we still start by looking at the most efficient teams on the offensive end for each year. We will use the order function to sort by ADJOE, and break ties using EFG_O, ORB, and FTR
+
+1) Teams with the best offensive efficiency from 2013 to 2019
+For reference, we can also see how they performed in the postseason
+```{r}
+cat("Best offensive teams by scoring efficiency\n")
+for (i in c(2013:2019)) {
+  df_tempyear = filter(df_working, YEAR==i)
+  df_tempyear = df_tempyear[order(-df_tempyear$ADJOE,-df_tempyear$EFG_O,-df_tempyear$FTR),]
+  cat(i,df_tempyear[1,1],": ",df_tempyear[1,20],"\n")
+}
+```
+Villanova in 2018 had the highest offensive efficiency by points, and that probably contributed to them winning a championship. In 2013, 2015, and 2016, the most efficient offensive teams (points wise) finished as the runner up. The other teams made it inot the round of 64 and the elite 8. 
+
+Another metric we can use to offensively rate teams (that does not directly involve scoring points is through offensive rebounds and a low turnover rate). Here are the best teams with a low turnover rate and high ORB for each year
+
+```{r}
+cat("Best offensive teams by low turnover and high offensive rebounding rate\n")
+for (i in c(2013:2019)) {
+  df_tempyear = filter(df_working, YEAR==i)
+  df_tempyear = df_tempyear[order(df_tempyear$TOR,-df_tempyear$ORB),]
+  cat(i,df_tempyear[1,1],": ",df_tempyear[1,20],"\n")
+}
+```
+3 out of the 7 teams did not make the postseason tournament, so it may not be as indicative of victory as offensive efficiency by scoring. Michigan and Wisconsin finished 2nd in their respective years.
+Looking at the two sets above, we can see that Michigan in 2013 and Wisconsin in 2015 have been the best offensive teams with respect to scoring points, as well as turning the ball over less and collecting offensive rebounds. 
+
+2) Teams with the best defensive efficiency from 2013 to 2019 
+```{r}
+cat("Best defensive teams by Adjusted Defensive Effciency and Effective Field Goal percentage allowed\n")
+for(i in c(2013:2019)) {
+  df_tempyear = filter(df_working, YEAR==i)
+  df_tempyear = df_tempyear[order(df_tempyear$ADJDE,df_tempyear$EFG_D),]
+  cat(i,df_tempyear[1,1],": ",df_tempyear[1,20],"\n")
+}
+```
+Gonzaga in 2017 and Texas Tech in 2019 are great examples of the effect a high ADJDE can have on success in the postseason tournament. Arizona in 2014 who finished in the elite 8 and kentucky in 2015 who finsihed in the final four are also notable exmaples. 
+```{r}
+cat("Best defensive teams by steal rate and defensive rebounding rate\n")
+for(i in c(2013:2019)) {
+  df_tempyear = filter(df_working, YEAR==i)
+  df_tempyear = df_tempyear[order(-df_tempyear$TORD,-df_tempyear$DRB),]
+  cat(i,df_tempyear[1,1],": ",df_tempyear[1,20],"\n")
+}
+```
+Forcing a lot of turnovers (high steal rate) and getting defensive rebounds is not necessarily indicative of success in the postseason as much as one may think. 
+
+3) Characteristics of a champions
+
+Now that we have seen some of the best teams for each of these offensive and defensive categories, let us take a look how the champions have performed in these fields. 
+
+```{r}
+df_2013 <- mutate(df_2013, rank_adjoe = rank(-df_2013$ADJOE, ties.method = "min"), rank_efgo = rank(-df_2013$EFG_O, ties.method = "min"), rank_tor = rank(df_2013$TOR, ties.method = "min"), rank_orb = rank(-df_2013$ORB, ties.method = "min"))
+df_2014 <- mutate(df_2014, rank_adjoe = rank(-df_2014$ADJOE, ties.method = "min"), rank_efgo = rank(-df_2014$EFG_O, ties.method = "min"), rank_tor = rank(df_2014$TOR, ties.method = "min"), rank_orb = rank(-df_2014$ORB, ties.method = "min"))
+df_2015 <- mutate(df_2015, rank_adjoe = rank(-df_2015$ADJOE, ties.method = "min"), rank_efgo = rank(-df_2015$EFG_O, ties.method = "min"), rank_tor = rank(df_2015$TOR, ties.method = "min"), rank_orb = rank(-df_2015$ORB, ties.method = "min"))
+df_2016 <- mutate(df_2016, rank_adjoe = rank(-df_2016$ADJOE, ties.method = "min"), rank_efgo = rank(-df_2016$EFG_O, ties.method = "min"), rank_tor = rank(df_2016$TOR, ties.method = "min"), rank_orb = rank(-df_2016$ORB, ties.method = "min"))
+df_2017 <- mutate(df_2017, rank_adjoe = rank(-df_2017$ADJOE, ties.method = "min"), rank_efgo = rank(-df_2017$EFG_O, ties.method = "min"), rank_tor = rank(df_2017$TOR, ties.method = "min"), rank_orb = rank(-df_2017$ORB, ties.method = "min"))
+df_2018 <- mutate(df_2018, rank_adjoe = rank(-df_2018$ADJOE, ties.method = "min"), rank_efgo = rank(-df_2018$EFG_O, ties.method = "min"), rank_tor = rank(df_2018$TOR, ties.method = "min"), rank_orb = rank(-df_2018$ORB, ties.method = "min"))
+df_2019 <- mutate(df_2019, rank_adjoe = rank(-df_2019$ADJOE, ties.method = "min"), rank_efgo = rank(-df_2019$EFG_O, ties.method = "min"), rank_tor = rank(df_2019$TOR, ties.method = "min"), rank_orb = rank(-df_2019$ORB, ties.method = "min"))
+
+c13 = filter(df_2013,POSTSEASON=="Champions")
+c14 = filter(df_2014,POSTSEASON=="Champions")
+c15 = filter(df_2015,POSTSEASON=="Champions")
+c16 = filter(df_2016,POSTSEASON=="Champions")
+c17 = filter(df_2017,POSTSEASON=="Champions")
+c18 = filter(df_2018,POSTSEASON=="Champions")
+c19 = filter(df_2019,POSTSEASON=="Champions")
+
+cat(c13[1,22],c13[1,1],"ADJOE:",c13[1,24],",EFG_O:",c13[1,25],",TOR:",c13[1,26],",ORB:",c13[1,27],"\n")
+cat(c14[1,22],c14[1,1],"ADJOE:",c14[1,24],",EFG_O:",c14[1,25],",TOR:",c14[1,26],",ORB:",c14[1,27],"\n")
+cat(c15[1,22],c15[1,1],"ADJOE:",c15[1,24],",EFG_O:",c15[1,25],",TOR:",c15[1,26],",ORB:",c15[1,27],"\n")
+cat(c16[1,22],c16[1,1],"ADJOE:",c16[1,24],",EFG_O:",c16[1,25],",TOR:",c16[1,26],",ORB:",c16[1,27],"\n")
+cat(c17[1,22],c17[1,1],"ADJOE:",c17[1,24],",EFG_O:",c17[1,25],",TOR:",c17[1,26],",ORB:",c17[1,27],"\n")
+cat(c18[1,22],c18[1,1],"ADJOE:",c18[1,24],",EFG_O:",c18[1,25],",TOR:",c18[1,26],",ORB:",c18[1,27],"\n")
+cat(c19[1,22],c19[1,1],"ADJOE:",c19[1,24],",EFG_O:",c19[1,25],",TOR:",c19[1,26],",ORB:",c19[1,27],"\n")
+```
+```{r}
+df_2013 <- mutate(df_2013, rank_adjde = rank(df_2013$ADJDE, ties.method = "min"), rank_efgd = rank(df_2013$EFG_D, ties.method = "min"), rank_tord = rank(-df_2013$TORD, ties.method = "min"), rank_drb = rank(df_2013$DRB, ties.method = "min"))
+df_2014 <- mutate(df_2014, rank_adjde = rank(df_2014$ADJDE, ties.method = "min"), rank_efgd = rank(df_2014$EFG_D, ties.method = "min"), rank_tord = rank(-df_2014$TORD, ties.method = "min"), rank_drb = rank(df_2014$DRB, ties.method = "min"))
+df_2015 <- mutate(df_2015, rank_adjde = rank(df_2015$ADJDE, ties.method = "min"), rank_efgd = rank(df_2015$EFG_D, ties.method = "min"), rank_tord = rank(-df_2015$TORD, ties.method = "min"), rank_drb = rank(df_2015$DRB, ties.method = "min"))
+df_2016 <- mutate(df_2016, rank_adjde = rank(df_2016$ADJDE, ties.method = "min"), rank_efgd = rank(df_2016$EFG_D, ties.method = "min"), rank_tord = rank(-df_2016$TORD, ties.method = "min"), rank_drb = rank(df_2016$DRB, ties.method = "min"))
+df_2017 <- mutate(df_2017, rank_adjde = rank(df_2017$ADJDE, ties.method = "min"), rank_efgd = rank(df_2017$EFG_D, ties.method = "min"), rank_tord = rank(-df_2017$TORD, ties.method = "min"), rank_drb = rank(df_2017$DRB, ties.method = "min"))
+df_2018 <- mutate(df_2018, rank_adjde = rank(df_2018$ADJDE, ties.method = "min"), rank_efgd = rank(df_2018$EFG_D, ties.method = "min"), rank_tord = rank(-df_2018$TORD, ties.method = "min"), rank_drb = rank(df_2018$DRB, ties.method = "min"))
+df_2019 <- mutate(df_2019, rank_adjde = rank(df_2019$ADJDE, ties.method = "min"), rank_efgd = rank(df_2019$EFG_D, ties.method = "min"), rank_tord = rank(-df_2019$TORD, ties.method = "min"), rank_drb = rank(df_2019$DRB, ties.method = "min"))
+
+cat(c13[1,22],c13[1,1],"ADJDE:",c13[1,28],",EFG_D:",c13[1,29],",TORD:",c13[1,30],",DRB:",c13[1,31],"\n")
+cat(c14[1,22],c14[1,1],"ADJDE:",c14[1,28],",EFG_D:",c14[1,29],",TORD:",c14[1,30],",DRB:",c14[1,31],"\n")
+cat(c15[1,22],c15[1,1],"ADJDE:",c15[1,28],",EFG_D:",c15[1,29],",TORD:",c15[1,30],",DRB:",c15[1,31],"\n")
+cat(c16[1,22],c16[1,1],"ADJDE:",c16[1,28],",EFG_D:",c16[1,29],",TORD:",c16[1,30],",DRB:",c16[1,31],"\n")
+cat(c17[1,22],c17[1,1],"ADJDE:",c17[1,28],",EFG_D:",c17[1,29],",TORD:",c17[1,30],",DRB:",c17[1,31],"\n")
+cat(c18[1,22],c18[1,1],"ADJDE:",c18[1,28],",EFG_D:",c18[1,29],",TORD:",c18[1,30],",DRB:",c18[1,31],"\n")
+cat(c19[1,22],c19[1,1],"ADJDE:",c19[1,28],",EFG_D:",c19[1,29],",TORD:",c19[1,30],",DRB:",c19[1,31],"\n")
+```
+Looking at the offensive and defensive rankings, we can see that the champions of each year, have a fairly well balanced offensive and defensive rankings. For example, Villanova had the best adjusted offensive efficiency, and effective field goal ranking in 2018. Virginia fell within the top 10 ranks for ADJOE, ADJDE, and EFG_D. We see a similar trend of champions bieng ranked high within 1 or more of these offensive and defensive categories.
+
+4) Vizualizations
+
+The 3-point shot in the game of basketball, is a shot taken form outside the three-point line. The game of basketball has evolved in such a way that this shot has become a key contributor to success in the NBA. The same can be said for college basketball as well, and in this scenario, we will take a look out how 3 point shooting percentages affect the win rate of a college basketball team (during the regular season) between the years 2013 and 2019.
+
+Begin by adding win rate to the df_working data frame
+```{r}
+df_working = mutate(df_working, winrate = W/G)
+```
+Now we can create a scatter plot with the winrate on the x-axis, and the 3pt percentage on the y-axis. We can aslo plot a regression line along with the scatterplot.
+```{r}
+p = ggplot(data = df_working, aes(x=winrate,y=X3P_O))
+p + geom_point() + geom_smooth(method=lm) + labs(x = "Win Rate",y = "3 Point %") + ggtitle("3 pt% Vs. Win Rate")
+```
+Similarly we can also look at how 3pt shooting percentages affects the number of wins in the post-season
+```{r}
+p = ggplot(data = df_working, aes(x=WAB,y=X3P_O))
+p + geom_point() + geom_smooth(method=lm) + labs(x = "Post-season Wins",y = "3 Point %") + ggtitle("3pt % Vs. Post-season Wins")
+```
+Low rate of turnovers can also be a key contributor to success in the in and post-season. We can use the turnover differential variable, to assess success in the in and post-season
+```{r}
+p = ggplot(data = df_working, aes(x=winrate,y=TORdiff))
+p + geom_point() + geom_smooth(method=lm) + labs(x = "Win Rate",y = "Turnover Differential") + ggtitle("Turnover Differential Vs. Win Rate")
+```
+```{r}
+p = ggplot(data = df_working, aes(x=WAB,y=TORdiff))
+p + geom_point() + geom_smooth(method=lm) + labs(x = "Post-season Wins",y = "Turnover Differential") + ggtitle("Turnover Differential Vs. Post-season Wins")
+```
+Lastly, we can get a visual perspective on how adjusted defensive efficiency affects success in the in and post-season
+```{r}
+p = ggplot(data = df_working, aes(x=winrate,y=ADJDE))
+p + geom_point() + geom_smooth(method=lm) + labs(x = "Win Rate",y = "ADJDE") + ggtitle("ADJDE Vs. Win Rate")
+```
+```{r}
+p = ggplot(data = df_working, aes(x=WAB,y=ADJDE))
+p + geom_point() + geom_smooth(method=lm) + labs(x = "Post-season Wins",y = "ADJDE") + ggtitle("ADJDE Vs. Post-season Wins")
+```
+
+5) To assess the strength of the relationship between some of these varibles and the win-rate in and post season, we can perform a regression analysis on multiple variables
+
+```{r}
+fit = lm(winrate ~ ADJOE + EFG_O + ORB + TOR, data = df_working)
+summary(fit)
+```
+With a significantly low p-value (< 2.2e-16) we see that EFG_O, ORB, and a low TOR significantly affects the win rate in the regular season.
+
+```{r}
+fit = lm(WAB ~ ADJDE + EFG_D + DRB + TORD, data = df_working)
+summary(fit)
+```
+We see similar significant effects for defensive stats, except for Offensive Rebounds allowed whose p-value is greater than 0.05 implying that its effect is not as significant.
