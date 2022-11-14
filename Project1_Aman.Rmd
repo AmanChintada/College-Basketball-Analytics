@@ -1,14 +1,4 @@
----
-title: "Project1"
-author: "Aman"
-date: "2022-10-03"
-output:
-  pdf_document: default
-  html_document:
-    df_print: paged
----
- 
-```{r}
+ ```{r}
 library(tidyverse)
 library(tidyr)
 library(dplyr)
